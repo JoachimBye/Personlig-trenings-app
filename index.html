@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="no" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f0f0f0" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trening">
+  <title>Trening</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <section class="view active" id="v-home">
+    <header class="topbar">
+      <h1>Mine økter</h1>
+      <button class="icon-btn" id="theme-toggle" aria-label="Bytt tema">
+        <span class="theme-icon-dark">🌙</span>
+        <span class="theme-icon-light">☀️</span>
+      </button>
+    </header>
+    <div class="scroll-area">
+      <div class="card-list" id="programs-list">
+        <div class="loading">Laster…</div>
+      </div>
+      <button class="add-row" id="add-program-btn">+ Nytt program</button>
+      <div class="week-card">
+        <div class="week-header">
+          <span>Denne uken</span>
+          <button class="link" id="history-link">Se historikk →</button>
+        </div>
+        <div class="week-grid" id="week-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROGRAM ============ -->
+  <section class="view" id="v-program">
+    <header class="topbar">
+      <button class="icon-btn back-btn" id="back-from-program" aria-label="Tilbake">←</button>
+      <h1 id="program-title"></h1>
+      <button class="icon-btn" id="delete-program-btn" aria-label="Slett program">⋯</button>
+    </header>
+    <div class="scroll-area">
+      <button class="add-row" id="add-exercise-btn">+ Legg til øvelse</button>
+      <div class="card-list" id="exercises-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ EXERCISE ============ -->
+  <section class="view" id="v-exercise">
+    <header class="topbar">
+      <button class="icon-btn back-btn" id="back-from-exercise" aria-label="Tilbake">←</button>
+      <h1 id="exercise-title"></h1>
+      <button class="icon-btn" id="delete-exercise-btn" aria-label="Slett øvelse">⋯</button>
+    </header>
+    <div class="scroll-area" id="sets-area"></div>
+    <button class="fab" id="add-set-btn" aria-label="Legg til sett">+</button>
+    <div class="rest-bar" id="rest-bar" hidden>
+      <div class="rest-ring">
+        <svg viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="17" class="ring-bg"/>
+          <circle cx="20" cy="20" r="17" class="ring-fg" id="rest-ring-fg"/>
+        </svg>
+        <span class="rest-time" id="rest-time">2:00</span>
+      </div>
+      <div class="rest-info">
+        <div class="rest-title">Hviler…</div>
+        <div class="rest-sub">Neste sett om litt</div>
+      </div>
+      <button class="rest-skip" id="rest-skip">Hopp over</button>
+    </div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section class="view" id="v-history">
+    <header class="topbar">
+      <button class="icon-btn back-btn" id="back-from-history" aria-label="Tilbake">←</button>
+      <h1>Historikk</h1>
+      <div class="topbar-spacer"></div>
+    </header>
+    <div class="week-nav">
+      <button class="icon-btn week-arrow" id="week-prev" aria-label="Forrige uke">‹</button>
+      <span id="week-label"></span>
+      <button class="icon-btn week-arrow" id="week-next" aria-label="Neste uke">›</button>
+    </div>
+    <div class="scroll-area" id="history-content"></div>
+  </section>
+
+  <!-- ============ LOG SET MODAL ============ -->
+  <div class="modal-backdrop" id="log-modal" hidden>
+    <div class="modal-sheet">
+
+      <div class="field-row">
+        <button class="field" id="field-reps" data-field="reps">
+          <div class="field-value">5</div>
+          <div class="field-label">REPS</div>
+        </button>
+        <div class="field-divider"></div>
+        <button class="field" id="field-kg" data-field="kg">
+          <div class="field-value">80</div>
+          <div class="field-label">KG</div>
+        </button>
+      </div>
+
+      <div class="toggle-row">
+        <button class="toggle work-toggle active" data-label="work">Arbeidssett</button>
+        <button class="toggle warm-toggle" data-label="warm">Oppvarming</button>
+      </div>
+
+      <div class="numpad">
+        <button class="key" data-key="1">1</button>
+        <button class="key" data-key="2">2</button>
+        <button class="key" data-key="3">3</button>
+        <button class="key" data-key="4">4</button>
+        <button class="key" data-key="5">5</button>
+        <button class="key" data-key="6">6</button>
+        <button class="key" data-key="7">7</button>
+        <button class="key" data-key="8">8</button>
+        <button class="key" data-key="9">9</button>
+        <button class="key" id="key-decimal" data-key=".">.</button>
+        <button class="key" data-key="0">0</button>
+        <button class="key" data-key="del" aria-label="Slett">⌫</button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="cancel-btn" id="cancel-set" aria-label="Avbryt">✕</button>
+        <button class="save-btn" id="save-set" aria-label="Lagre">✓</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

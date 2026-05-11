@@ -2,8 +2,8 @@
 // Database-funksjoner mot Supabase
 // ============================================================
 
-if (!SUPABASE_URL || SUPABASE_URL === 'YOUR_SUPABASE_URL' ||
-    !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+if (!SUPABASE_URL || SUPABASE_URL === 'hfqgrcwboeklcxccqslj' ||
+    !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmcWdyY3dib2VrbGN4Y2Nxc2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0ODEzNzMsImV4cCI6MjA5NDA1NzM3M30.-YpNN2xnnHtEOYGqXG8j4NIpX5ByFapeojcEW9s-Y9k') {
   document.body.innerHTML = `
     <div style="padding:40px 24px;font-family:sans-serif;color:#fff;background:#0d0d0d;height:100vh">
       <h1 style="margin-bottom:16px">Oppsett mangler</h1>

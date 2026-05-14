@@ -1,8 +1,7 @@
 // ============================================================
-// TRENINGSAPP – hovedlogikk
+// TRENINGSAPP – hovedlogikk v2
 // ============================================================
 
-// ---------- State ----------
 const state = {
   view: 'home',
   programs: [],
@@ -30,7 +29,7 @@ const state = {
 function startOfWeek(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;   // Mandag som ukestart
+  const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -64,7 +63,7 @@ function getWeekNumber(date) {
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 }
 
@@ -79,10 +78,10 @@ function navigate(viewName, payload = null) {
   state.view = viewName;
   closeLogModal();
 
-  if (viewName === 'home')                          renderHome();
-  else if (viewName === 'program'  && payload)      renderProgram(payload);
-  else if (viewName === 'exercise' && payload)      renderExercise(payload);
-  else if (viewName === 'history')                  renderHistory();
+  if (viewName === 'home')                     renderHome();
+  else if (viewName === 'program'  && payload) renderProgram(payload);
+  else if (viewName === 'exercise' && payload) renderExercise(payload);
+  else if (viewName === 'history')             renderHistory();
 }
 
 // ---------- Tema ----------
@@ -111,9 +110,9 @@ async function renderHome() {
         <div class="sub">Trykk på "+ Nytt program" nedenfor</div>
       </div>`;
     } else {
+      // Ingen ●-ikon — navnene bærer siden alene
       listEl.innerHTML = programs.map(p => `
         <div class="list-row" data-program-id="${p.id}">
-          <span class="list-row-icon">●</span>
           <span class="list-row-title">${escapeHtml(p.name)}</span>
           <span class="list-row-meta">${p.exercise_count}</span>
           <span class="list-row-chev">›</span>
@@ -166,7 +165,7 @@ async function renderWeekGrid() {
       </div>`;
     }).join('');
   } catch (err) {
-    console.error('Kunne ikke laste uke', err);
+    console.error('Uke-feil', err);
   }
 }
 
@@ -229,12 +228,12 @@ async function renderExercise(exercise) {
     if (sets.length === 0) {
       setsEl.innerHTML = `<div class="empty-state">
         <div class="title">Ingen sett ennå</div>
-        <div class="sub">Trykk på + for å legge til ditt første sett</div>
+        <div class="sub">Trykk + for å logge ditt første sett</div>
       </div>`;
       return;
     }
 
-    // Grupperer sett per dag
+    // Grupper per dag
     const groups = {};
     for (const s of sets) {
       const dayKey = new Date(s.logged_at).toDateString();
@@ -244,8 +243,8 @@ async function renderExercise(exercise) {
 
     let html = '';
     for (const dayKey of Object.keys(groups)) {
-      const daySets = [...groups[dayKey]].reverse(); // eldste først i hver dag
-      html += `<div class="day-header">${capitalize(formatWeekday(dayKey)).toUpperCase()}</div>`;
+      const daySets = [...groups[dayKey]].reverse();
+      html += `<div class="day-header">${capitalize(formatWeekday(dayKey))}</div>`;
       html += '<div class="card-list">';
       daySets.forEach((s, i) => {
         const w = parseFloat(s.weight_kg);
@@ -259,8 +258,7 @@ async function renderExercise(exercise) {
               : '<span class="set-spacer"></span>'}
             <span class="set-reps">${s.reps}<span class="set-reps-unit">rep</span></span>
             <span class="set-kg">${wDisplay}<span class="set-kg-unit">kg</span></span>
-          </div>
-        `;
+          </div>`;
       });
       html += '</div>';
     }
@@ -276,7 +274,6 @@ async function renderExercise(exercise) {
 
 // ---------- LOG MODAL ----------
 function openLogModal() {
-  // Forhåndsutfyll med siste sett om mulig
   if (state.sets.length > 0) {
     const last = state.sets[0];
     state.numpad.reps = String(last.reps);
@@ -311,7 +308,7 @@ function pressKey(key) {
     current = current.length > 1 ? current.slice(0, -1) : '0';
     if (current === '0.') current = '0';
   } else if (key === '.') {
-    if (active !== 'kg') return;          // ingen desimal på reps
+    if (active !== 'kg') return;
     if (current.includes('.')) return;
     current += '.';
   } else {
@@ -332,13 +329,13 @@ function renderNumpad() {
   fieldReps.classList.toggle('active', isReps);
   fieldKg.classList.toggle('active', !isReps);
 
-  const repsValEl = fieldReps.querySelector('.field-value');
-  const kgValEl   = fieldKg.querySelector('.field-value');
+  fieldReps.querySelector('.field-value').innerHTML =
+    state.numpad.reps + (isReps  ? '<span class="cursor"></span>' : '');
+  fieldKg.querySelector('.field-value').innerHTML =
+    state.numpad.kg   + (!isReps ? '<span class="cursor"></span>' : '');
 
-  repsValEl.innerHTML = state.numpad.reps + (isReps  ? '<span class="cursor"></span>' : '');
-  kgValEl.innerHTML   = state.numpad.kg   + (!isReps ? '<span class="cursor"></span>' : '');
-
-  document.getElementById('key-decimal').disabled = isReps;
+  const decimal = document.getElementById('key-decimal');
+  decimal.disabled = isReps;
 
   document.querySelectorAll('.toggle').forEach(t => {
     t.classList.toggle('active', t.dataset.label === state.numpad.label);
@@ -352,10 +349,7 @@ async function saveSet() {
   const kg   = parseFloat(state.numpad.kg);
   const isWarmup = state.numpad.label === 'warm';
 
-  if (!reps || isNaN(kg)) {
-    showToast('Sjekk verdiene');
-    return;
-  }
+  if (!reps || isNaN(kg)) { showToast('Sjekk verdiene'); return; }
 
   try {
     await db.addSet(state.currentExercise.id, reps, kg, isWarmup);
@@ -373,27 +367,20 @@ function startRestTimer() {
   stopRestTimer();
   state.timer.seconds = REST_SECONDS;
   state.timer.active = true;
-
   document.getElementById('rest-bar').hidden = false;
   document.getElementById('add-set-btn').classList.add('resting');
   updateRestDisplay();
-
   state.timer.interval = setInterval(() => {
     state.timer.seconds--;
     updateRestDisplay();
     if (state.timer.seconds <= 0) {
-      playBeep();
-      vibrate();
-      stopRestTimer();
+      playBeep(); vibrate(); stopRestTimer();
     }
   }, 1000);
 }
 
 function stopRestTimer() {
-  if (state.timer.interval) {
-    clearInterval(state.timer.interval);
-    state.timer.interval = null;
-  }
+  if (state.timer.interval) { clearInterval(state.timer.interval); state.timer.interval = null; }
   state.timer.active = false;
   document.getElementById('rest-bar').hidden = true;
   document.getElementById('add-set-btn').classList.remove('resting');
@@ -402,9 +389,7 @@ function stopRestTimer() {
 function updateRestDisplay() {
   const m = Math.floor(state.timer.seconds / 60);
   const s = state.timer.seconds % 60;
-  document.getElementById('rest-time').textContent =
-    `${m}:${String(s).padStart(2, '0')}`;
-
+  document.getElementById('rest-time').textContent = `${m}:${String(s).padStart(2,'0')}`;
   const circumference = 2 * Math.PI * 17;
   const offset = circumference * (1 - state.timer.seconds / REST_SECONDS);
   document.getElementById('rest-ring-fg').style.strokeDashoffset = offset;
@@ -416,21 +401,15 @@ function playBeep() {
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
-    o.type = 'sine';
-    o.frequency.value = 800;
+    o.type = 'sine'; o.frequency.value = 800;
     g.gain.setValueAtTime(0.3, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-    o.start();
-    o.stop(ctx.currentTime + 0.6);
-  } catch (e) {
-    console.warn('Kunne ikke spille lyd', e);
-  }
+    o.start(); o.stop(ctx.currentTime + 0.6);
+  } catch (e) { console.warn('Lyd feilet', e); }
 }
 
 function vibrate() {
-  if (navigator.vibrate) {
-    navigator.vibrate([200, 100, 200]);
-  }
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
 }
 
 // ---------- HISTORY ----------
@@ -448,22 +427,12 @@ async function renderHistory() {
 
   try {
     const sets = await db.getWeekActivity(weekStart);
-
-    // Grupper per dag
     const days = {};
     for (const s of sets) {
       const k = new Date(s.logged_at).toDateString();
-      if (!days[k]) {
-        days[k] = {
-          date: new Date(s.logged_at),
-          exercises: new Set(),
-          programs: new Set(),
-        };
-      }
+      if (!days[k]) days[k] = { date: new Date(s.logged_at), exercises: new Set(), programs: new Set() };
       days[k].exercises.add(s.exercise_id);
-      if (s.exercises?.programs?.name) {
-        days[k].programs.add(s.exercises.programs.name);
-      }
+      if (s.exercises?.programs?.name) days[k].programs.add(s.exercises.programs.name);
     }
 
     const trainedIdx = new Set();
@@ -472,21 +441,21 @@ async function renderHistory() {
       trainedIdx.add(day === 0 ? 6 : day - 1);
     }
 
-    const labels = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
-    let html = `<div class="week-card" style="margin:0 14px 12px">
+    const labels = ['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+    let html = `<div class="week-card" style="margin:0 16px 12px">
       <div class="week-header">
         <span>Uke ${getWeekNumber(weekStart)}</span>
-        <span class="link">${trainedIdx.size} av 7 dager</span>
+        <span class="link" style="cursor:default">${trainedIdx.size} av 7 dager</span>
       </div>
-      <div class="week-grid">${labels.map((l, i) => `
-        <div class="week-day ${trainedIdx.has(i) ? 'active' : ''}">
+      <div class="week-grid">${labels.map((l,i) => `
+        <div class="week-day ${trainedIdx.has(i)?'active':''}">
           <div class="week-day-dot"></div>
           <div class="week-day-label">${l}</div>
         </div>`).join('')}
       </div>
     </div>`;
 
-    const sortedDays = Object.values(days).sort((a, b) => a.date - b.date);
+    const sortedDays = Object.values(days).sort((a,b) => a.date - b.date);
     if (sortedDays.length === 0) {
       html += `<div class="empty-state">
         <div class="title">Ingen trening denne uken</div>
@@ -501,7 +470,7 @@ async function renderHistory() {
               <div class="session-day">${capitalize(formatWeekday(d.date))}</div>
               <div class="session-meta">${escapeHtml(programList)} · ${d.exercises.size} øvelser</div>
             </div>
-            <span class="session-check">●</span>
+            <span class="session-check">✓</span>
           </div>`;
       }
       html += '</div>';
@@ -535,40 +504,25 @@ function showToast(msg) {
   setTimeout(() => t.remove(), 2500);
 }
 
-// ---------- Init / event listeners ----------
+// ---------- Init ----------
 function init() {
   loadTheme();
 
   document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
-  document.getElementById('back-from-program').addEventListener('click',
-    () => navigate('home'));
-  document.getElementById('back-from-exercise').addEventListener('click',
-    () => navigate('program', state.currentProgram));
-  document.getElementById('back-from-history').addEventListener('click',
-    () => navigate('home'));
-
-  document.getElementById('history-link').addEventListener('click', () => {
-    state.history.weekOffset = 0;
-    navigate('history');
-  });
-
+  document.getElementById('back-from-program').addEventListener('click', () => navigate('home'));
+  document.getElementById('back-from-exercise').addEventListener('click', () => navigate('program', state.currentProgram));
+  document.getElementById('back-from-history').addEventListener('click', () => navigate('home'));
+  document.getElementById('history-link').addEventListener('click', () => { state.history.weekOffset = 0; navigate('history'); });
   document.getElementById('week-prev').addEventListener('click', () => changeWeek(-1));
   document.getElementById('week-next').addEventListener('click', () => changeWeek(1));
-
   document.getElementById('add-set-btn').addEventListener('click', openLogModal);
 
-  document.querySelectorAll('.field').forEach(f => {
-    f.addEventListener('click', () => setActiveField(f.dataset.field));
-  });
-
-  document.querySelectorAll('.toggle').forEach(t => {
-    t.addEventListener('click', () => setLabel(t.dataset.label));
-  });
-
-  document.querySelectorAll('.key').forEach(k => {
-    k.addEventListener('click', () => pressKey(k.dataset.key));
-  });
+  document.querySelectorAll('.field').forEach(f =>
+    f.addEventListener('click', () => setActiveField(f.dataset.field)));
+  document.querySelectorAll('.toggle').forEach(t =>
+    t.addEventListener('click', () => setLabel(t.dataset.label)));
+  document.querySelectorAll('.key').forEach(k =>
+    k.addEventListener('click', () => pressKey(k.dataset.key)));
 
   document.getElementById('cancel-set').addEventListener('click', closeLogModal);
   document.getElementById('save-set').addEventListener('click', saveSet);
@@ -577,45 +531,34 @@ function init() {
   document.getElementById('add-program-btn').addEventListener('click', async () => {
     const name = prompt('Navn på programmet:');
     if (!name?.trim()) return;
-    try {
-      await db.addProgram(name.trim());
-      renderHome();
-    } catch (err) { showToast('Feil: ' + err.message); }
+    try { await db.addProgram(name.trim()); renderHome(); }
+    catch (err) { showToast('Feil: ' + err.message); }
   });
 
   document.getElementById('add-exercise-btn').addEventListener('click', async () => {
     if (!state.currentProgram) return;
     const name = prompt('Navn på øvelsen:');
     if (!name?.trim()) return;
-    try {
-      await db.addExercise(state.currentProgram.id, name.trim());
-      renderProgram(state.currentProgram);
-    } catch (err) { showToast('Feil: ' + err.message); }
+    try { await db.addExercise(state.currentProgram.id, name.trim()); renderProgram(state.currentProgram); }
+    catch (err) { showToast('Feil: ' + err.message); }
   });
 
   document.getElementById('delete-program-btn').addEventListener('click', async () => {
     if (!state.currentProgram) return;
     if (!confirm(`Slett "${state.currentProgram.name}" og alle øvelser/sett?`)) return;
-    try {
-      await db.deleteProgram(state.currentProgram.id);
-      navigate('home');
-    } catch (err) { showToast('Feil: ' + err.message); }
+    try { await db.deleteProgram(state.currentProgram.id); navigate('home'); }
+    catch (err) { showToast('Feil: ' + err.message); }
   });
 
   document.getElementById('delete-exercise-btn').addEventListener('click', async () => {
     if (!state.currentExercise) return;
     if (!confirm(`Slett "${state.currentExercise.name}" og alle sett?`)) return;
-    try {
-      await db.deleteExercise(state.currentExercise.id);
-      navigate('program', state.currentProgram);
-    } catch (err) { showToast('Feil: ' + err.message); }
+    try { await db.deleteExercise(state.currentExercise.id); navigate('program', state.currentProgram); }
+    catch (err) { showToast('Feil: ' + err.message); }
   });
 
-  // Lukk modal med Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !document.getElementById('log-modal').hidden) {
-      closeLogModal();
-    }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !document.getElementById('log-modal').hidden) closeLogModal();
   });
 
   renderHome();
